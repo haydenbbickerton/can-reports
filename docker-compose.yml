@@ -1,0 +1,56 @@
+version: '2'
+
+services:
+  postgres:
+    image: postgres:9.6
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+
+  client:
+    image: nginx:stable-alpine
+    volumes:
+      - ./client/dist:/usr/share/nginx/html
+    ports:
+      - "${NGINX_PORT}:80"
+
+  django:
+    restart: always
+    env_file: '.env'
+    image: web
+    build: ./
+    command: >
+      bash -c "python3 wait_for_postgres.py &&
+               ./manage.py migrate &&
+               ./manage.py runserver 0.0.0.0:${DJANGO_PORT}"
+    volumes:
+      - ./:/code
+      - 'cachedata:/cache'
+    ports:
+      - "${DJANGO_PORT}:${DJANGO_PORT}"
+    depends_on:
+      - postgres
+      - redis
+
+  realtime:
+    image: web
+    ports:
+      - '${REALTIME_PORT}:${REALTIME_PORT}'
+    env_file: '.env'
+    command: 'python3 realtime_ws_server.py'
+    volumes_from:
+      - django
+    depends_on:
+      - redis
+      - django
+
+  redis:
+    container_name: 'redis'
+    image: 'redis:3.2.0'
+    ports:
+      - '${REDIS_PORT}:${REDIS_PORT}'
+    volumes:
+      - 'redisdata:/data'
+
+volumes:
+  redisdata:
+  cachedata:
