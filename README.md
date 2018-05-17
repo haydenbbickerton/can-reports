@@ -5,7 +5,9 @@ A SPA/REST API combo for ingesting [CAN bus](https://en.wikipedia.org/wiki/CAN_b
 
 You must have docker installed - [Docker](https://docs.docker.com/install/)
 
-Start the dev server for local development:
+Copy the `.env.example` file to `.env`, fill it out.
+
+Then start the dev server for local development:
 ```bash
 docker-compose up --build
 ```
